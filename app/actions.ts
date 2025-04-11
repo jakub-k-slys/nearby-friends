@@ -17,6 +17,17 @@ export async function setCurrentUser(userId: string, latitude: number, longitude
     id: userId,
     location: { latitude, longitude }
   }
+  
+  // Add or update current user in the connected users list
+  connectedUsers.addUser({
+    id: userId,
+    name: "You",
+    avatar: "",
+    distance: 0,
+    lastSeen: new Date().toISOString(),
+    status: "online",
+    location: { latitude, longitude }
+  })
 }
 
 export async function getConnectedUsers(): Promise<ConnectedUser[]> {

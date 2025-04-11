@@ -19,17 +19,24 @@ export default function NearbyFriends() {
   const [currentUserId] = useState(() => `user_${Math.random().toString(36).slice(2)}`) // Generate unique ID for current user
 
   useEffect(() => {
+    const handlePositionUpdate = async (pos: GeolocationPosition) => {
+      try {
+        await setCurrentUser(currentUserId, pos.latitude, pos.longitude);
+      } catch (err) {
+        console.error('Failed to update user location:', err);
+        setError('Failed to update location. Please refresh the page.');
+      }
+    };
+
     let watchId: number;
 
     // Initialize location tracking
     getCurrentPosition(
       async (position: GeolocationPosition) => {
-        await setCurrentUser(currentUserId, position.latitude, position.longitude);
+        await handlePositionUpdate(position);
         
         // Start watching position
-        watchId = watchPosition(async (pos: GeolocationPosition) => {
-          await setCurrentUser(currentUserId, pos.latitude, pos.longitude);
-        });
+        watchId = watchPosition(handlePositionUpdate);
       },
       (error: { code: number; message: string }) => {
         console.error('Geolocation error:', error);
@@ -65,7 +72,7 @@ export default function NearbyFriends() {
         clearWatch(watchId)
       }
     }
-  }, [])
+  }, [currentUserId])
 
   if (loading) {
     return (
