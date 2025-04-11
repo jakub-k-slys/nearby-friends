@@ -7,7 +7,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 
 import { ConnectedUser } from "@/lib/users"
-import { getConnectedUsers } from "@/app/actions"
+import { getConnectedUsers, setCurrentUserLocation } from "@/app/actions"
+import { getCurrentPosition, watchPosition, clearWatch, GeolocationPosition } from "@/lib/geolocation"
 
 export default function NearbyFriends() {
   const [friends, setFriends] = useState<ConnectedUser[]>([])
@@ -17,6 +18,24 @@ export default function NearbyFriends() {
   const [isPending, startTransition] = useTransition()
 
   useEffect(() => {
+    let watchId: number;
+
+    // Initialize location tracking
+    getCurrentPosition(
+      async (position: GeolocationPosition) => {
+        await setCurrentUserLocation(position.latitude, position.longitude);
+        
+        // Start watching position
+        watchId = watchPosition(async (pos: GeolocationPosition) => {
+          await setCurrentUserLocation(pos.latitude, pos.longitude);
+        });
+      },
+      (error: { code: number; message: string }) => {
+        console.error('Geolocation error:', error);
+        setError('Unable to access location. Please enable location services.');
+      }
+    );
+
     const fetchUsers = () => {
       startTransition(async () => {
         try {
@@ -38,8 +57,13 @@ export default function NearbyFriends() {
     // Set up polling interval
     const interval = setInterval(fetchUsers, 5000) // Update every 5 seconds
 
-    // Cleanup interval on unmount
-    return () => clearInterval(interval)
+    // Cleanup interval and location watch on unmount
+    return () => {
+      clearInterval(interval)
+      if (watchId) {
+        clearWatch(watchId)
+      }
+    }
   }, [])
 
   if (loading) {
