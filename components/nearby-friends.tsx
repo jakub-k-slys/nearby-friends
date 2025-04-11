@@ -26,9 +26,11 @@ export default function NearbyFriends() {
         await setCurrentUser(currentUserId, pos.latitude, pos.longitude);
         setLocationStatus('granted');
         setError(null);
+        setLoading(false);
       } catch (err) {
         console.error('Failed to update user location:', err);
         setError('Failed to update location. Please refresh the page.');
+        setLoading(false);
       }
     };
 
@@ -36,26 +38,72 @@ export default function NearbyFriends() {
 
     const setupGeolocation = () => {
       setLocationStatus('requesting');
+      setLoading(true);
       console.log('Requesting geolocation...');
 
-      // Initialize location tracking
-      getCurrentPosition(
-        async (position: GeolocationPosition) => {
-          console.log('Initial position received:', position);
-          await handlePositionUpdate(position);
-          
-          // Start watching position
-          watchId = watchPosition(handlePositionUpdate);
-          console.log('Started watching position with ID:', watchId);
-        },
-        (error: { code: number; message: string }) => {
-          console.error('Geolocation error:', error);
-          setLocationStatus('denied');
-          setError('Unable to access location. Please enable location services and refresh the page.');
+      try {
+        if (!navigator.geolocation) {
+          throw new Error('Geolocation is not supported by your browser');
         }
-      );
+
+        // Initialize location tracking with shorter timeout
+        const options = {
+          enableHighAccuracy: true,
+          timeout: 5000, // 5 second timeout
+          maximumAge: 0
+        };
+
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            console.log('Initial position received:', position);
+            await handlePositionUpdate({
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+              accuracy: position.coords.accuracy,
+              timestamp: position.timestamp
+            });
+            
+            // Start watching position
+            watchId = navigator.geolocation.watchPosition(
+              pos => handlePositionUpdate({
+                latitude: pos.coords.latitude,
+                longitude: pos.coords.longitude,
+                accuracy: pos.coords.accuracy,
+                timestamp: pos.timestamp
+              }),
+              error => {
+                console.error('Watch position error:', error);
+                setError(`Location error: ${error.message}`);
+                setLoading(false);
+              },
+              options
+            );
+            console.log('Started watching position with ID:', watchId);
+          },
+          (error) => {
+            console.error('Geolocation error:', error);
+            setLocationStatus('denied');
+            setError(
+              error.code === 1
+                ? 'Location access was denied. Please enable location services in your browser settings.'
+                : error.code === 2
+                ? 'Unable to determine your location. Please try again.'
+                : error.code === 3
+                ? 'Location request timed out. Please try again.'
+                : 'Unable to access location. Please refresh the page.'
+            );
+            setLoading(false);
+          },
+          options
+        );
+      } catch (err) {
+        console.error('Geolocation setup error:', err);
+        setError('Failed to initialize location services. Please refresh the page.');
+        setLoading(false);
+      }
     };
 
+    // Start geolocation setup
     setupGeolocation();
 
     const fetchUsers = () => {
