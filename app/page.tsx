@@ -5,9 +5,9 @@ import Footer from "@/components/footer"
 
 export default function LandingPage() {
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex flex-col min-h-screen items-center justify-center">
       <Header />
-      <main className="flex-1">
+      <main className="flex flex-col">
         <HeroSection />
         <NearbyFriends />
       </main>

@@ -29,32 +29,13 @@ export default function Header() {
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-6">
-          <Link href="#features" className="text-sm font-medium hover:text-primary">
-            Features
-          </Link>
           <Link href="#how-it-works" className="text-sm font-medium hover:text-primary">
             How It Works
-          </Link>
-          <Link href="#pricing" className="text-sm font-medium hover:text-primary">
-            Pricing
           </Link>
           <Link href="#about" className="text-sm font-medium hover:text-primary">
             About
           </Link>
         </nav>
-
-        <div className="hidden md:flex items-center gap-4">
-          <Button variant="outline" size="sm">
-            Log In
-          </Button>
-          <Button size="sm">Sign Up</Button>
-        </div>
-
-        {/* Mobile Menu Button */}
-        <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-          {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          <span className="sr-only">Toggle menu</span>
-        </Button>
       </div>
 
       {/* Mobile Navigation */}
@@ -62,37 +43,15 @@ export default function Header() {
         <div className="container md:hidden py-4 pb-6">
           <nav className="flex flex-col gap-4">
             <Link
-              href="#features"
-              className="text-sm font-medium hover:text-primary"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Features
-            </Link>
-            <Link
               href="#how-it-works"
               className="text-sm font-medium hover:text-primary"
               onClick={() => setIsMenuOpen(false)}
             >
               How It Works
             </Link>
-            <Link
-              href="#pricing"
-              className="text-sm font-medium hover:text-primary"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              Pricing
-            </Link>
             <Link href="#about" className="text-sm font-medium hover:text-primary" onClick={() => setIsMenuOpen(false)}>
               About
             </Link>
-            <div className="flex flex-col gap-2 mt-2">
-              <Button variant="outline" size="sm" className="w-full">
-                Log In
-              </Button>
-              <Button size="sm" className="w-full">
-                Sign Up
-              </Button>
-            </div>
           </nav>
         </div>
       )}
