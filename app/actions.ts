@@ -12,7 +12,7 @@ let currentUser = {
   }
 }
 
-export function setCurrentUser(userId: string, latitude: number, longitude: number) {
+export async function setCurrentUser(userId: string, latitude: number, longitude: number) {
   currentUser = {
     id: userId,
     location: { latitude, longitude }
