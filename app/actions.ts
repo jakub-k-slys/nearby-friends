@@ -12,31 +12,6 @@ let currentUser = {
   }
 }
 
-// Add some test users for development
-const testUsers = [
-  {
-    id: "test_user_1",
-    name: "Alice",
-    avatar: "",
-    distance: 0,
-    lastSeen: new Date().toISOString(),
-    status: "online" as const,
-    location: { latitude: 52.237049, longitude: 21.017532 } // Warsaw
-  },
-  {
-    id: "test_user_2",
-    name: "Bob",
-    avatar: "",
-    distance: 0,
-    lastSeen: new Date().toISOString(),
-    status: "online" as const,
-    location: { latitude: 52.239271, longitude: 21.019802 } // Nearby Warsaw
-  }
-];
-
-// Initialize test users
-testUsers.forEach(user => connectedUsers.addUser(user));
-
 export async function setCurrentUser(userId: string, latitude: number, longitude: number) {
   currentUser = {
     id: userId,
@@ -57,8 +32,13 @@ export async function setCurrentUser(userId: string, latitude: number, longitude
 
 export async function getConnectedUsers(): Promise<ConnectedUser[]> {
   const users = connectedUsers.getAllUsers()
+  const tenSecondsAgo = new Date(Date.now() - 10000).toISOString(); // 10 seconds ago
+  
   return users
-    .filter(user => user.id !== currentUser.id) // Only exclude current user, keep test users for now
+    .filter(user => {
+      // Exclude current user and users who haven't been seen in last 10 seconds
+      return user.id !== currentUser.id && user.lastSeen > tenSecondsAgo;
+    })
     .map(user => ({
       ...user,
       distance: user.location 
