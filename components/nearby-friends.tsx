@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 
 import { ConnectedUser } from "@/lib/users"
-import { getConnectedUsers, setCurrentUserLocation } from "@/app/actions"
+import { getConnectedUsers, setCurrentUser } from "@/app/actions"
 import { getCurrentPosition, watchPosition, clearWatch, GeolocationPosition } from "@/lib/geolocation"
 
 export default function NearbyFriends() {
@@ -16,6 +16,7 @@ export default function NearbyFriends() {
   const [error, setError] = useState<string | null>(null)
 
   const [isPending, startTransition] = useTransition()
+  const [currentUserId] = useState(() => `user_${Math.random().toString(36).slice(2)}`) // Generate unique ID for current user
 
   useEffect(() => {
     let watchId: number;
@@ -23,11 +24,11 @@ export default function NearbyFriends() {
     // Initialize location tracking
     getCurrentPosition(
       async (position: GeolocationPosition) => {
-        await setCurrentUserLocation(position.latitude, position.longitude);
+        await setCurrentUser(currentUserId, position.latitude, position.longitude);
         
         // Start watching position
         watchId = watchPosition(async (pos: GeolocationPosition) => {
-          await setCurrentUserLocation(pos.latitude, pos.longitude);
+          await setCurrentUser(currentUserId, pos.latitude, pos.longitude);
         });
       },
       (error: { code: number; message: string }) => {
