@@ -1,11 +1,45 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useTransition, useEffect } from "react"
 import { MapPin, Navigation } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { updateUserLocation, addConnectedUser } from "@/app/actions"
+
+const generateUserId = () => {
+  return 'user-' + Math.random().toString(36).substr(2, 9);
+}
 
 export default function HeroSection() {
+  const [userId, setUserId] = useState<string>("")
+
+  useEffect(() => {
+    // Get or create user ID
+    const storedUserId = localStorage.getItem('userId')
+    if (storedUserId) {
+      setUserId(storedUserId)
+    } else {
+      const newUserId = generateUserId()
+      localStorage.setItem('userId', newUserId)
+      setUserId(newUserId)
+      // Add new user
+      startTransition(async () => {
+        try {
+          await addConnectedUser({
+            id: newUserId,
+            name: `User ${newUserId.split('-')[1]}`,
+            avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${newUserId}`,
+            distance: 0,
+            lastSeen: new Date().toISOString(),
+            status: 'online'
+          })
+        } catch (err) {
+          console.error("Failed to add new user:", err)
+        }
+      })
+    }
+  }, [])
+
   const [location, setLocation] = useState<{
     latitude: number | null
     longitude: number | null
@@ -17,6 +51,8 @@ export default function HeroSection() {
   })
 
   const [isLoading, setIsLoading] = useState(false)
+
+  const [isPending, startTransition] = useTransition()
 
   const getLocation = () => {
     setIsLoading(true)
@@ -32,11 +68,33 @@ export default function HeroSection() {
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
+        const latitude = position.coords.latitude
+        const longitude = position.coords.longitude
+        
+        // Update local state
         setLocation({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
+          latitude,
+          longitude,
           error: null,
         })
+
+        // Update server with location
+        startTransition(async () => {
+          try {
+            if (userId) {
+              await updateUserLocation(userId, latitude, longitude)
+            } else {
+              throw new Error("No user ID available")
+            }
+          } catch (err) {
+            console.error("Failed to update location on server:", err)
+            setLocation(prev => ({
+              ...prev,
+              error: "Failed to share location with server"
+            }))
+          }
+        })
+        
         setIsLoading(false)
       },
       (error) => {
