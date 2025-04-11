@@ -26,8 +26,15 @@ export const getCurrentPosition = (onSuccess: GeolocationCallback, onError?: Geo
     return
   }
 
+  const options = {
+    enableHighAccuracy: true,
+    timeout: 10000,
+    maximumAge: 0
+  };
+
   navigator.geolocation.getCurrentPosition(
     (position) => {
+      console.log('Raw geolocation response:', position);
       onSuccess({
         latitude: position.coords.latitude,
         longitude: position.coords.longitude,
@@ -36,6 +43,7 @@ export const getCurrentPosition = (onSuccess: GeolocationCallback, onError?: Geo
       })
     },
     (error) => {
+      console.error('Geolocation error details:', error);
       if (onError) {
         onError({
           code: error.code,
@@ -43,6 +51,7 @@ export const getCurrentPosition = (onSuccess: GeolocationCallback, onError?: Geo
         })
       }
     },
+    options
   )
 }
 
@@ -57,8 +66,15 @@ export const watchPosition = (onSuccess: GeolocationCallback, onError?: Geolocat
     return 0
   }
 
+  const options = {
+    enableHighAccuracy: true,
+    timeout: 10000,
+    maximumAge: 0
+  };
+
   return navigator.geolocation.watchPosition(
     (position) => {
+      console.log('Watch position update:', position);
       onSuccess({
         latitude: position.coords.latitude,
         longitude: position.coords.longitude,
@@ -67,6 +83,7 @@ export const watchPosition = (onSuccess: GeolocationCallback, onError?: Geolocat
       })
     },
     (error) => {
+      console.error('Watch position error:', error);
       if (onError) {
         onError({
           code: error.code,
@@ -74,6 +91,7 @@ export const watchPosition = (onSuccess: GeolocationCallback, onError?: Geolocat
         })
       }
     },
+    options
   )
 }
 

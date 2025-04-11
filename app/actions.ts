@@ -67,7 +67,7 @@ export async function getConnectedUsers(): Promise<ConnectedUser[]> {
             currentUser.location.longitude,
             user.location.latitude,
             user.location.longitude
-          ) * 0.621371) // Convert km to miles and round to nearest mile
+          )) // Distance in kilometers, rounded to nearest km
         : 0
     }))
 }

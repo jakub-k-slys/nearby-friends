@@ -13,6 +13,7 @@ import { getCurrentPosition, watchPosition, clearWatch, GeolocationPosition } fr
 export default function NearbyFriends() {
   const [friends, setFriends] = useState<ConnectedUser[]>([])
   const [loading, setLoading] = useState(true)
+  const [locationStatus, setLocationStatus] = useState<'requesting' | 'granted' | 'denied' | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const [isPending, startTransition] = useTransition()
@@ -20,8 +21,11 @@ export default function NearbyFriends() {
 
   useEffect(() => {
     const handlePositionUpdate = async (pos: GeolocationPosition) => {
+      console.log('Position update received:', pos);
       try {
         await setCurrentUser(currentUserId, pos.latitude, pos.longitude);
+        setLocationStatus('granted');
+        setError(null);
       } catch (err) {
         console.error('Failed to update user location:', err);
         setError('Failed to update location. Please refresh the page.');
@@ -30,19 +34,29 @@ export default function NearbyFriends() {
 
     let watchId: number;
 
-    // Initialize location tracking
-    getCurrentPosition(
-      async (position: GeolocationPosition) => {
-        await handlePositionUpdate(position);
-        
-        // Start watching position
-        watchId = watchPosition(handlePositionUpdate);
-      },
-      (error: { code: number; message: string }) => {
-        console.error('Geolocation error:', error);
-        setError('Unable to access location. Please enable location services.');
-      }
-    );
+    const setupGeolocation = () => {
+      setLocationStatus('requesting');
+      console.log('Requesting geolocation...');
+
+      // Initialize location tracking
+      getCurrentPosition(
+        async (position: GeolocationPosition) => {
+          console.log('Initial position received:', position);
+          await handlePositionUpdate(position);
+          
+          // Start watching position
+          watchId = watchPosition(handlePositionUpdate);
+          console.log('Started watching position with ID:', watchId);
+        },
+        (error: { code: number; message: string }) => {
+          console.error('Geolocation error:', error);
+          setLocationStatus('denied');
+          setError('Unable to access location. Please enable location services and refresh the page.');
+        }
+      );
+    };
+
+    setupGeolocation();
 
     const fetchUsers = () => {
       startTransition(async () => {
@@ -74,13 +88,19 @@ export default function NearbyFriends() {
     }
   }, [currentUserId])
 
-  if (loading) {
+  if (loading && locationStatus !== 'denied') {
     return (
       <section className="w-full py-12 md:py-24 bg-muted/30">
         <div className="container px-4 md:px-6">
           <div className="flex flex-col items-center justify-center space-y-4 text-center">
             <Loader2 className="h-8 w-8 animate-spin" />
-            <p>Loading nearby friends...</p>
+            <p>
+              {locationStatus === 'requesting' 
+                ? 'Requesting location access...' 
+                : locationStatus === 'granted'
+                ? 'Loading nearby friends...'
+                : 'Initializing...'}
+            </p>
           </div>
         </div>
       </section>
@@ -138,7 +158,7 @@ export default function NearbyFriends() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-1">
                     <MapPin className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">{friend.distance} miles away</span>
+                    <span className="text-sm font-medium">{friend.distance} km away</span>
                   </div>
                   <Badge
                     variant={
