@@ -1,52 +1,71 @@
 "use client"
 
-import { useState } from "react"
-import { Users, MapPin } from "lucide-react"
+import { useState, useEffect, useTransition } from "react"
+import { Users, MapPin, Loader2 } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 
-// Mock data for nearby friends
-const mockFriends = [
-  {
-    id: 1,
-    name: "Alex Johnson",
-    avatar: "/placeholder.svg?height=40&width=40",
-    distance: 0.3,
-    lastSeen: "2 min ago",
-    status: "online",
-  },
-  {
-    id: 2,
-    name: "Jamie Smith",
-    avatar: "/placeholder.svg?height=40&width=40",
-    distance: 0.8,
-    lastSeen: "5 min ago",
-    status: "online",
-  },
-  {
-    id: 3,
-    name: "Taylor Wilson",
-    avatar: "/placeholder.svg?height=40&width=40",
-    distance: 1.2,
-    lastSeen: "15 min ago",
-    status: "away",
-  },
-  {
-    id: 4,
-    name: "Morgan Lee",
-    avatar: "/placeholder.svg?height=40&width=40",
-    distance: 2.5,
-    lastSeen: "1 hour ago",
-    status: "offline",
-  },
-]
+import { ConnectedUser } from "@/lib/users"
+import { getConnectedUsers } from "@/app/actions"
 
 export default function NearbyFriends() {
-  const [friends, setFriends] = useState(mockFriends)
+  const [friends, setFriends] = useState<ConnectedUser[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  // In a real app, this would fetch friends based on the user's location
-  // For demo purposes, we're using mock data
+  const [isPending, startTransition] = useTransition()
+
+  useEffect(() => {
+    const fetchUsers = () => {
+      startTransition(async () => {
+        try {
+          const users = await getConnectedUsers()
+          setFriends(users)
+          setError(null)
+        } catch (err) {
+          setError('Failed to load nearby friends')
+          console.error('Error fetching users:', err)
+        } finally {
+          setLoading(false)
+        }
+      })
+    }
+
+    // Initial fetch
+    fetchUsers()
+
+    // Set up polling interval
+    const interval = setInterval(fetchUsers, 5000) // Update every 5 seconds
+
+    // Cleanup interval on unmount
+    return () => clearInterval(interval)
+  }, [])
+
+  if (loading) {
+    return (
+      <section className="w-full py-12 md:py-24 bg-muted/30">
+        <div className="container px-4 md:px-6">
+          <div className="flex flex-col items-center justify-center space-y-4 text-center">
+            <Loader2 className="h-8 w-8 animate-spin" />
+            <p>Loading nearby friends...</p>
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  if (error) {
+    return (
+      <section className="w-full py-12 md:py-24 bg-muted/30">
+        <div className="container px-4 md:px-6">
+          <div className="flex flex-col items-center justify-center space-y-4 text-center">
+            <p className="text-red-500">{error}</p>
+          </div>
+        </div>
+      </section>
+    )
+  }
 
   return (
     <section className="w-full py-12 md:py-24 bg-muted/30">
@@ -66,8 +85,11 @@ export default function NearbyFriends() {
         </div>
 
         <div className="mx-auto mt-8 grid max-w-5xl gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-          {friends.map((friend) => (
-            <Card key={friend.id} className="overflow-hidden">
+          {friends.length === 0 ? (
+            <p className="col-span-full text-center text-muted-foreground">No nearby friends found</p>
+          ) : (
+            friends.map((friend) => (
+              <Card key={friend.id} className="overflow-hidden">
               <CardHeader className="p-4">
                 <div className="flex items-center space-x-4">
                   <Avatar>
@@ -97,7 +119,8 @@ export default function NearbyFriends() {
                 </div>
               </CardContent>
             </Card>
-          ))}
+            ))
+          )}
         </div>
       </div>
     </section>
