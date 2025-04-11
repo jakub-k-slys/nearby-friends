@@ -12,6 +12,31 @@ let currentUser = {
   }
 }
 
+// Add some test users for development
+const testUsers = [
+  {
+    id: "test_user_1",
+    name: "Alice",
+    avatar: "",
+    distance: 0,
+    lastSeen: new Date().toISOString(),
+    status: "online" as const,
+    location: { latitude: 52.237049, longitude: 21.017532 } // Warsaw
+  },
+  {
+    id: "test_user_2",
+    name: "Bob",
+    avatar: "",
+    distance: 0,
+    lastSeen: new Date().toISOString(),
+    status: "online" as const,
+    location: { latitude: 52.239271, longitude: 21.019802 } // Nearby Warsaw
+  }
+];
+
+// Initialize test users
+testUsers.forEach(user => connectedUsers.addUser(user));
+
 export async function setCurrentUser(userId: string, latitude: number, longitude: number) {
   currentUser = {
     id: userId,
@@ -25,7 +50,7 @@ export async function setCurrentUser(userId: string, latitude: number, longitude
     avatar: "",
     distance: 0,
     lastSeen: new Date().toISOString(),
-    status: "online",
+    status: "online" as const,
     location: { latitude, longitude }
   })
 }
@@ -33,7 +58,7 @@ export async function setCurrentUser(userId: string, latitude: number, longitude
 export async function getConnectedUsers(): Promise<ConnectedUser[]> {
   const users = connectedUsers.getAllUsers()
   return users
-    .filter(user => user.id !== currentUser.id) // Exclude current user
+    .filter(user => user.id !== currentUser.id) // Only exclude current user, keep test users for now
     .map(user => ({
       ...user,
       distance: user.location 
