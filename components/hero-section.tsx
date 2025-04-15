@@ -13,32 +13,32 @@ const generateUserId = () => {
 export default function HeroSection() {
   const [userId, setUserId] = useState<string>("")
 
-  useEffect(() => {
-    // Get or create user ID
-    const storedUserId = localStorage.getItem('userId')
-    if (storedUserId) {
-      setUserId(storedUserId)
-    } else {
-      const newUserId = generateUserId()
-      localStorage.setItem('userId', newUserId)
-      setUserId(newUserId)
-      // Add new user
-      startTransition(async () => {
-        try {
-          await addConnectedUser({
-            id: newUserId,
-            name: `User ${newUserId.split('-')[1]}`,
-            avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${newUserId}`,
-            distance: 0,
-            lastSeen: new Date().toISOString(),
-            status: 'online'
-          })
-        } catch (err) {
-          console.error("Failed to add new user:", err)
-        }
-      })
-    }
-  }, [])
+  // useEffect(() => {
+  //   // Get or create user ID
+  //   const storedUserId = localStorage.getItem('userId')
+  //   if (storedUserId) {
+  //     setUserId(storedUserId)
+  //   } else {
+  //     const newUserId = generateUserId()
+  //     localStorage.setItem('userId', newUserId)
+  //     setUserId(newUserId)
+  //     // Add new user
+  //     startTransition(async () => {
+  //       try {
+  //         await addConnectedUser({
+  //           id: newUserId,
+  //           name: `User ${newUserId.split('-')[1]}`,
+  //           avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${newUserId}`,
+  //           distance: 0,
+  //           lastSeen: new Date().toISOString(),
+  //           status: 'online'
+  //         })
+  //       } catch (err) {
+  //         console.error("Failed to add new user:", err)
+  //       }
+  //     })
+  //   }
+  // }, [])
 
   const [location, setLocation] = useState<{
     latitude: number | null
@@ -57,55 +57,84 @@ export default function HeroSection() {
   const getLocation = () => {
     setIsLoading(true)
 
-    if (!navigator.geolocation) {
-      setLocation({
-        ...location,
-        error: "Geolocation is not supported by your browser",
-      })
-      setIsLoading(false)
-      return
-    }
-
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const latitude = position.coords.latitude
         const longitude = position.coords.longitude
-        
         // Update local state
         setLocation({
           latitude,
           longitude,
           error: null,
         })
+        setIsLoading(false)
+      },
+        (error) => {
+            setLocation({
+            ...location,
+            error: `Unable to retrieve your location: ${error.message}`,
+            })
+          setIsLoading(false)
+        },
+        {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 1000000,
+        }
+      )
+  }
+  // const getLocation = () => {
+  //   setIsLoading(true)
+  //
+  //   if (!navigator.geolocation) {
+  //     setLocation({
+  //       ...location,
+  //       error: "Geolocation is not supported by your browser",
+  //     })
+  //     setIsLoading(false)
+  //     return
+  //   }
+
+    // navigator.geolocation.getCurrentPosition(
+    //   (position) => {
+    //     const latitude = position.coords.latitude
+    //     const longitude = position.coords.longitude
+    //
+    //     // Update local state
+    //     setLocation({
+    //       latitude,
+    //       longitude,
+    //       error: null,
+    //     })
 
         // Update server with location
-        startTransition(async () => {
-          try {
-            if (userId) {
-              await updateUserLocation(userId, latitude, longitude)
-            } else {
-              throw new Error("No user ID available")
-            }
-          } catch (err) {
-            console.error("Failed to update location on server:", err)
-            setLocation(prev => ({
-              ...prev,
-              error: "Failed to share location with server"
-            }))
-          }
-        })
+        // startTransition(async () => {
+        //   try {
+        //     if (userId) {
+        //       await updateUserLocation(userId, latitude, longitude)
+        //     } else {
+        //       throw new Error("No user ID available")
+        //     }
+        //   } catch (err) {
+        //     console.error("Failed to update location on server:", err)
+        //     setLocation(prev => ({
+        //       ...prev,
+        //       error: "Failed to share location with server"
+        //     }))
+        //   }
+        // })
         
-        setIsLoading(false)
-      },
-      (error) => {
-        setLocation({
-          ...location,
-          error: `Unable to retrieve your location: ${error.message}`,
-        })
-        setIsLoading(false)
-      },
-    )
-  }
+  //       setIsLoading(false)
+  //     },
+  //     (error) => {
+  //       setLocation({
+  //         ...location,
+  //         error: `Unable to retrieve your location: ${error.message}`,
+  //       })
+  //       setIsLoading(false)
+  //     },
+  //   )
+  // }
 
   return (
     <section className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-b from-background to-muted/50">
@@ -141,16 +170,16 @@ export default function HeroSection() {
 
                   {location.error ? (
                     <div className="rounded-lg bg-destructive/10 p-4 text-destructive">{location.error}</div>
-                  ) : location.latitude && location.longitude ? (
+                  ) : location.latitude || location.longitude ? (
                     <div className="space-y-2">
                       <div className="grid grid-cols-2 gap-2">
                         <div className="rounded-lg bg-muted p-3">
                           <p className="text-sm font-medium">Latitude</p>
-                          <p className="text-lg font-semibold">{location.latitude.toFixed(6)}</p>
+                          <p className="text-lg font-semibold">{location.latitude?.toFixed(6)}</p>
                         </div>
                         <div className="rounded-lg bg-muted p-3">
                           <p className="text-sm font-medium">Longitude</p>
-                          <p className="text-lg font-semibold">{location.longitude.toFixed(6)}</p>
+                          <p className="text-lg font-semibold">{location.longitude?.toFixed(6)}</p>
                         </div>
                       </div>
                       <div className="flex items-center justify-center rounded-lg bg-muted/50 p-4">

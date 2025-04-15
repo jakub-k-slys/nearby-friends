@@ -7,8 +7,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 
 import { ConnectedUser } from "@/lib/users"
-import { getConnectedUsers, setCurrentUser } from "@/app/actions"
-import { getCurrentPosition, watchPosition, clearWatch, GeolocationPosition } from "@/lib/geolocation"
 
 export default function NearbyFriends() {
   const [friends, setFriends] = useState<ConnectedUser[]>([])
@@ -19,33 +17,35 @@ export default function NearbyFriends() {
   const [isPending, startTransition] = useTransition()
   const [currentUserId] = useState(() => `user_${Math.random().toString(36).slice(2)}`) // Generate unique ID for current user
 
-  useEffect(() => {
-    const handlePositionUpdate = async (pos: GeolocationPosition) => {
-      console.log('Position update received:', pos);
-      try {
-        await setCurrentUser(currentUserId, pos.latitude, pos.longitude);
-        setLocationStatus('granted');
-        setError(null);
-        setLoading(false);
-      } catch (err) {
-        console.error('Failed to update user location:', err);
-        setError('Failed to update location. Please refresh the page.');
-        setLoading(false);
-      }
-    };
-
+  // useEffect(() => {
+  //   const handlePositionUpdate = async (pos: GeolocationPosition) => {
+  //     console.log('Position update received:', pos);
+  //     try {
+  //       await setCurrentUser(currentUserId, pos.latitude, pos.longitude);
+  //       setLocationStatus('granted');
+  //       setError(null);
+  //       setLoading(false);
+  //     } catch (err) {
+  //       console.error('Failed to update user location:', err);
+  //       setError('Failed to update location. Please refresh the page.');
+  //       setLoading(false);
+  //     }
+  //   };
+  //
     let watchId: number;
 
-    const setupGeolocation = () => {
-      setLocationStatus('requesting');
-      setLoading(true);
-      console.log('Requesting geolocation...');
+  //   const setupGeolocation = () => {
+  //     setLocationStatus('requesting');
+  //     setLoading(true);
+  //     console.log('Requesting geolocation...');
+  //
+  //       if (!navigator.geolocation) {
+  //         throw new Error('Geolocation is not supported by your browser');
+  //       }
 
-      try {
-        if (!navigator.geolocation) {
-          throw new Error('Geolocation is not supported by your browser');
-        }
-
+  useEffect(() => {
+    setLocationStatus('granted');
+  }, []);
         // Initialize location tracking with shorter timeout
         const options = {
           enableHighAccuracy: true,
@@ -53,88 +53,42 @@ export default function NearbyFriends() {
           maximumAge: 0
         };
 
-        navigator.geolocation.getCurrentPosition(
-          async (position) => {
-            console.log('Initial position received:', position);
-            await handlePositionUpdate({
-              latitude: position.coords.latitude,
-              longitude: position.coords.longitude,
-              accuracy: position.coords.accuracy,
-              timestamp: position.timestamp
-            });
-            
+//        navigator.geolocation.getCurrentPosition(() => {}, () => {}, options)
+
             // Start watching position
-            watchId = navigator.geolocation.watchPosition(
-              pos => handlePositionUpdate({
-                latitude: pos.coords.latitude,
-                longitude: pos.coords.longitude,
-                accuracy: pos.coords.accuracy,
-                timestamp: pos.timestamp
-              }),
-              error => {
-                console.error('Watch position error:', error);
-                setError(`Location error: ${error.message}`);
-                setLoading(false);
-              },
-              options
-            );
-            console.log('Started watching position with ID:', watchId);
-          },
-          (error) => {
-            console.error('Geolocation error:', error);
-            setLocationStatus('denied');
-            setError(
-              error.code === 1
-                ? 'Location access was denied. Please enable location services in your browser settings.'
-                : error.code === 2
-                ? 'Unable to determine your location. Please try again.'
-                : error.code === 3
-                ? 'Location request timed out. Please try again.'
-                : 'Unable to access location. Please refresh the page.'
-            );
-            setLoading(false);
-          },
-          options
-        );
-      } catch (err) {
-        console.error('Geolocation setup error:', err);
-        setError('Failed to initialize location services. Please refresh the page.');
-        setLoading(false);
-      }
-    };
-
+//        watchId = navigator.geolocation.watchPosition(() => {}, () => {}, options);
     // Start geolocation setup
-    setupGeolocation();
 
-    const fetchUsers = () => {
-      startTransition(async () => {
-        try {
-          const users = await getConnectedUsers()
-          setFriends(users)
-          setError(null)
-        } catch (err) {
-          setError('Failed to load nearby friends')
-          console.error('Error fetching users:', err)
-        } finally {
-          setLoading(false)
-        }
-      })
-    }
-
-    // Initial fetch
-    fetchUsers()
-
-    // Set up polling interval
-    const interval = setInterval(fetchUsers, 5000) // Update every 5 seconds
-
-    // Cleanup interval and location watch on unmount
-    return () => {
-      clearInterval(interval)
-      if (watchId) {
-        clearWatch(watchId)
-      }
-    }
-  }, [currentUserId])
+  //
+  //   const fetchUsers = () => {
+  //     startTransition(async () => {
+  //       try {
+  //         const users = await getConnectedUsers()
+  //         setFriends(users)
+  //         setError(null)
+  //       } catch (err) {
+  //         setError('Failed to load nearby friends')
+  //         console.error('Error fetching users:', err)
+  //       } finally {
+  //         setLoading(false)
+  //       }
+  //     })
+  //   }
+  //
+  //   // Initial fetch
+  //   fetchUsers()
+  //
+  //   // Set up polling interval
+  //   const interval = setInterval(fetchUsers, 5000) // Update every 5 seconds
+  //
+  //   // Cleanup interval and location watch on unmount
+  //   return () => {
+  //     clearInterval(interval)
+  //     if (watchId) {
+  //       clearWatch(watchId)
+  //     }
+  //   }
+  // }, [currentUserId])
 
   if (loading && locationStatus !== 'denied') {
     return (
