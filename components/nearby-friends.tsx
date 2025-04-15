@@ -6,12 +6,21 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 
-import { ConnectedUser } from '@/lib/users'
+import { getUsers, User } from '@/lib/users'
 import { useUserId } from '@/hooks/use-user-id'
 
 export default function NearbyFriends() {
-    const [friends, setFriends] = useState<ConnectedUser[]>([])
+    const [friends, setFriends] = useState<User[]>([])
     const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        getUsers().then(res => {
+            setFriends(res)
+            setLoading(false)
+        })
+    }, [friends]);
+
+
     const [locationStatus, setLocationStatus] = useState<'requesting' | 'granted' | 'denied' | null>(null)
     const [error, setError] = useState<string | null>(null)
 
@@ -21,49 +30,6 @@ export default function NearbyFriends() {
     useEffect(() => {
         setLocationStatus('granted')
     }, [])
-    // Initialize location tracking with shorter timeout
-    const options = {
-        enableHighAccuracy: true,
-        timeout: 5000, // 5 second timeout
-        maximumAge: 0,
-    }
-
-    //        navigator.geolocation.getCurrentPosition(() => {}, () => {}, options)
-
-    // Start watching position
-    //        watchId = navigator.geolocation.watchPosition(() => {}, () => {}, options);
-    // Start geolocation setup
-
-    //
-    //   const fetchUsers = () => {
-    //     startTransition(async () => {
-    //       try {
-    //         const users = await getConnectedUsers()
-    //         setFriends(users)
-    //         setError(null)
-    //       } catch (err) {
-    //         setError('Failed to load nearby friends')
-    //         console.error('Error fetching users:', err)
-    //       } finally {
-    //         setLoading(false)
-    //       }
-    //     })
-    //   }
-    //
-    //   // Initial fetch
-    //   fetchUsers()
-    //
-    //   // Set up polling interval
-    //   const interval = setInterval(fetchUsers, 5000) // Update every 5 seconds
-    //
-    //   // Cleanup interval and location watch on unmount
-    //   return () => {
-    //     clearInterval(interval)
-    //     if (watchId) {
-    //       clearWatch(watchId)
-    //     }
-    //   }
-    // }, [currentUserId])
 
     if (loading && locationStatus !== 'denied') {
         return (
@@ -122,12 +88,12 @@ export default function NearbyFriends() {
                                 <CardHeader className='p-4'>
                                     <div className='flex items-center space-x-4'>
                                         <Avatar>
-                                            <AvatarImage src={friend.avatar} alt={friend.name} />
-                                            <AvatarFallback>{friend.name.charAt(0)}</AvatarFallback>
+                                            <AvatarImage  />
+                                            <AvatarFallback />
                                         </Avatar>
                                         <div>
-                                            <CardTitle className='text-base'>{friend.name}</CardTitle>
-                                            <CardDescription>{friend.lastSeen}</CardDescription>
+                                            <CardTitle className='text-base'>{friend.id}</CardTitle>
+                                            <CardDescription>{friend.timestamp}</CardDescription>
                                         </div>
                                     </div>
                                 </CardHeader>
@@ -135,14 +101,12 @@ export default function NearbyFriends() {
                                     <div className='flex items-center justify-between'>
                                         <div className='flex items-center space-x-1'>
                                             <MapPin className='h-4 w-4 text-muted-foreground' />
-                                            <span className='text-sm font-medium'>{friend.distance} km away</span>
+                                            <span className='text-sm font-medium'>{friend.id} km away</span>
                                         </div>
                                         <Badge
-                                            variant={
-                                                friend.status === 'online' ? 'default' : friend.status === 'away' ? 'outline' : 'secondary'
-                                            }
-                                            className={friend.status === 'online' ? 'bg-green-500' : ''}>
-                                            {friend.status}
+                                            variant={'default'}
+                                            className={'bg-green-500'}>
+                                            {friend.id}
                                         </Badge>
                                     </div>
                                 </CardContent>

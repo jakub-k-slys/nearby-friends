@@ -1,71 +1,34 @@
-export interface ConnectedUser {
+'use server'
+
+let users: Map<string, User> = new Map()
+
+export interface User {
     id: string
-    name: string
-    avatar: string
-    distance: number
-    lastSeen: string
-    status: 'online' | 'away' | 'offline'
+    timestamp: string
     location?: {
         latitude: number
         longitude: number
     }
 }
 
-class ConnectedUsers {
-    private static instance: ConnectedUsers
-    private users: Map<string, ConnectedUser>
-
-    private constructor() {
-        this.users = new Map()
-    }
-
-    public static getInstance(): ConnectedUsers {
-        if (!ConnectedUsers.instance) {
-            ConnectedUsers.instance = new ConnectedUsers()
-        }
-        return ConnectedUsers.instance
-    }
-
-    public addUser(user: ConnectedUser): void {
-        this.users.set(user.id, {
-            ...user,
-            lastSeen: new Date().toISOString(),
-            status: 'online',
-        })
-    }
-
-    public removeUser(userId: string): void {
-        this.users.delete(userId)
-    }
-
-    public updateUserStatus(userId: string, status: 'online' | 'away' | 'offline'): void {
-        const user = this.users.get(userId)
-        if (user) {
-            this.users.set(userId, {
-                ...user,
-                status,
-                lastSeen: new Date().toISOString(),
-            })
-        }
-    }
-
-    public updateUserLocation(userId: string, latitude: number, longitude: number): void {
-        const user = this.users.get(userId)
-        if (user) {
-            this.users.set(userId, {
-                ...user,
-                location: { latitude, longitude },
-            })
-        }
-    }
-
-    public getAllUsers(): ConnectedUser[] {
-        return Array.from(this.users.values())
-    }
-
-    public getUser(userId: string): ConnectedUser | undefined {
-        return this.users.get(userId)
-    }
+export const updateUser = async (user: User) => {
+    filterUsers()
+    users.set(user.id, user)
 }
 
-export const connectedUsers = ConnectedUsers.getInstance()
+export const getUsers = async () : Promise<User[]> => {
+    return users.values().toArray()
+}
+
+const filterUsers = () => {
+    let now = new Date(Date.now())
+
+    let filteredUsers: Map<string, User> = new Map()
+    for (let [_, value] of users) {
+        let lastSeen = new Date(value.timestamp)
+        if (now.getTime() - lastSeen.getTime() < 10000) {
+            filteredUsers.set(value.id, value)
+        }
+    }
+    users = filteredUsers
+}
