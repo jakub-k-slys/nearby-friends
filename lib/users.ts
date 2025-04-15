@@ -5,10 +5,7 @@ let users: Map<string, User> = new Map()
 export interface User {
     id: string
     timestamp: string
-    location?: {
-        latitude: number
-        longitude: number
-    }
+    location?: GeolocationCoordinates | undefined
 }
 
 export const updateUser = async (user: User) => {

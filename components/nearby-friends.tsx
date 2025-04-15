@@ -1,17 +1,18 @@
 'use client'
 
-import { useState, useEffect, useTransition } from 'react'
+import { useState, useEffect } from 'react'
 import { Users, MapPin, Loader2 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
-
 import { getUsers, User } from '@/lib/users'
-import { useUserId } from '@/hooks/use-user-id'
+import { useStoredCoordinate } from '@/hooks/use-stored-geolocation'
+import { calculateDistance } from '@/lib/geolocation'
 
 export default function NearbyFriends() {
     const [friends, setFriends] = useState<User[]>([])
     const [loading, setLoading] = useState(true)
+    const { location } = useStoredCoordinate()
 
     useEffect(() => {
         getUsers().then(res => {
@@ -21,10 +22,7 @@ export default function NearbyFriends() {
     }, [friends])
 
     const [locationStatus, setLocationStatus] = useState<'requesting' | 'granted' | 'denied' | null>(null)
-    const [error, setError] = useState<string | null>(null)
-
-    const [isPending, startTransition] = useTransition()
-    const { userId } = useUserId()
+    const [error] = useState<string | null>(null)
 
     useEffect(() => {
         setLocationStatus('granted')
@@ -100,7 +98,7 @@ export default function NearbyFriends() {
                                     <div className='flex items-center justify-between'>
                                         <div className='flex items-center space-x-1'>
                                             <MapPin className='h-4 w-4 text-muted-foreground' />
-                                            <span className='text-sm font-medium'>{friend.id} km away</span>
+                                            {location && friend.location && (<span className='text-sm font-medium'>{calculateDistance(location!, friend.location!)} km away</span>)}
                                         </div>
                                         <Badge variant={'default'} className={'bg-green-500'}>
                                             {friend.id}
