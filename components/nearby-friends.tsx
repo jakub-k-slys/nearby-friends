@@ -18,8 +18,7 @@ export default function NearbyFriends() {
             setFriends(res)
             setLoading(false)
         })
-    }, [friends]);
-
+    }, [friends])
 
     const [locationStatus, setLocationStatus] = useState<'requesting' | 'granted' | 'denied' | null>(null)
     const [error, setError] = useState<string | null>(null)
@@ -88,7 +87,7 @@ export default function NearbyFriends() {
                                 <CardHeader className='p-4'>
                                     <div className='flex items-center space-x-4'>
                                         <Avatar>
-                                            <AvatarImage  />
+                                            <AvatarImage />
                                             <AvatarFallback />
                                         </Avatar>
                                         <div>
@@ -103,9 +102,7 @@ export default function NearbyFriends() {
                                             <MapPin className='h-4 w-4 text-muted-foreground' />
                                             <span className='text-sm font-medium'>{friend.id} km away</span>
                                         </div>
-                                        <Badge
-                                            variant={'default'}
-                                            className={'bg-green-500'}>
+                                        <Badge variant={'default'} className={'bg-green-500'}>
                                             {friend.id}
                                         </Badge>
                                     </div>

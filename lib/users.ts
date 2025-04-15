@@ -16,7 +16,7 @@ export const updateUser = async (user: User) => {
     users.set(user.id, user)
 }
 
-export const getUsers = async () : Promise<User[]> => {
+export const getUsers = async (): Promise<User[]> => {
     return users.values().toArray()
 }
 

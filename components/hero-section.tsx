@@ -4,42 +4,21 @@ import { useState } from 'react'
 import { MapPin, Navigation } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-
+import { useStoredCoordinate } from '@/hooks/use-stored-geolocation'
 
 export default function HeroSection() {
-
-    const [location, setLocation] = useState<{
-        latitude: number | null
-        longitude: number | null
-        error: string | null
-    }>({
-        latitude: null,
-        longitude: null,
-        error: null,
-    })
-
     const [isLoading, setIsLoading] = useState(false)
+    const { location, setLocation, error, setError } = useStoredCoordinate()
 
     const getLocation = () => {
         setIsLoading(true)
-
         navigator.geolocation.getCurrentPosition(
             position => {
-                const latitude = position.coords.latitude
-                const longitude = position.coords.longitude
-                // Update local state
-                setLocation({
-                    latitude,
-                    longitude,
-                    error: null,
-                })
+                setLocation(position.coords)
                 setIsLoading(false)
             },
             error => {
-                setLocation({
-                    ...location,
-                    error: `Unable to retrieve your location: ${error.message}`,
-                })
+                setError(`Unable to retrieve your location: ${error.message}`)
                 setIsLoading(false)
             },
             {
@@ -81,9 +60,9 @@ export default function HeroSection() {
                                         <h3 className='text-xl font-semibold'>Your Current Location</h3>
                                     </div>
 
-                                    {location.error ? (
-                                        <div className='rounded-lg bg-destructive/10 p-4 text-destructive'>{location.error}</div>
-                                    ) : location.latitude || location.longitude ? (
+                                    {error ? (
+                                        <div className='rounded-lg bg-destructive/10 p-4 text-destructive'>{error}</div>
+                                    ) : location?.latitude || location?.longitude ? (
                                         <div className='space-y-2'>
                                             <div className='grid grid-cols-2 gap-2'>
                                                 <div className='rounded-lg bg-muted p-3'>
