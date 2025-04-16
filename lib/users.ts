@@ -9,8 +9,8 @@ export interface User {
 }
 
 export const updateUser = async (user: User) => {
-    filterUsers()
     users.set(user.id, user)
+    filterUsers()
 }
 
 export const getUsers = async (): Promise<User[]> => {
@@ -23,7 +23,7 @@ const filterUsers = () => {
     let filteredUsers: Map<string, User> = new Map()
     for (let [_, value] of users) {
         let lastSeen = new Date(value.timestamp)
-        if (now.getTime() - lastSeen.getTime() < 10000) {
+        if (now.getTime() - lastSeen.getTime() < 30000) {
             filteredUsers.set(value.id, value)
         }
     }
