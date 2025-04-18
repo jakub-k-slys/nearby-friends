@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { Facebook, Twitter, Instagram, Linkedin, Github } from 'lucide-react'
+import { getData } from '@/lib/users'
 
 export default function Footer() {
     return (
@@ -48,6 +49,7 @@ export default function Footer() {
                 <div className='mt-12 border-t pt-6'>
                     <p className='text-center text-sm text-muted-foreground'>
                         © {new Date().getFullYear()} GeoConnect. All rights reserved.
+                        Version: {getData()}
                     </p>
                 </div>
             </div>

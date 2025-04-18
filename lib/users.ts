@@ -1,5 +1,7 @@
 'use server'
 
+import { neon } from '@neondatabase/serverless'
+
 let users: Map<string, User> = new Map()
 
 export interface User {
@@ -28,4 +30,10 @@ const filterUsers = () => {
         }
     }
     users = filteredUsers
+}
+
+export const getData = async () => {
+    const sql = neon(process.env.DATABASE_URL!);
+    const response = await sql`SELECT version()`;
+    return response[0].version;
 }
