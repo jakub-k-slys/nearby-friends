@@ -32,8 +32,13 @@ const filterUsers = () => {
     users = filteredUsers
 }
 
-export const getData = async () => {
+const getVersion = async () => {
     const sql = neon(process.env.DATABASE_URL!);
     const response = await sql`SELECT version()`;
     return response[0].version;
+}
+
+export const Version = async ()=> {
+    const data = await getVersion();
+    return (<>{data}</>);
 }
